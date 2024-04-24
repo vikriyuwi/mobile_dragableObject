@@ -1,8 +1,8 @@
 //
 //  ContentView.swift
-//  dragAndDrop
+//  dragAndDropCollision
 //
-//  Created by win win on 22/04/24.
+//  Created by Nadhif Rahman Alfan on 23/04/24.
 //
 
 import SwiftUI
@@ -17,33 +17,41 @@ extension Color {
     }
 }
 
-struct Th: Hashable {
-    var color: Color
-}
-
 struct ContentView: View {
-    @State var things = [
-        Th(color: .random)
+    
+    @State private var ingridients: [Ingridient] = [
+        Ingridient(id: 1, name: "Rice", color: .random),
+        Ingridient(id: 2, name: "Salmon", color: .random),
+        Ingridient(id: 3, name: "Shrimp", color: .random),
+        Ingridient(id: 4, name: "Tuna", color: .random),
     ]
+    
+//    @State private var droppedIngridients: [IngridientView] = []
+    @State private var droppedIngridients: [Ingridient] = []
     
     var body: some View {
         ZStack {
             Button{
-                things.append(Th(color: Color.random))
+                let newIngridient = ingridients.randomElement()!
+                
+                droppedIngridients.append(
+                    Ingridient(id: droppedIngridients.count, name: newIngridient.name, color: newIngridient.color)
+                )
+
             } label: {
                 Image(systemName: "plus")
             }
             .buttonStyle(.bordered)
-            if things.count > 0 {
-                ForEach(things, id:\.self) { item in
-                    ThingItem(color: item.color)
+            if droppedIngridients.count > 0 {
+                ForEach(droppedIngridients.indices, id: \.self) { index in
+                    IngridientView(ingridient: $droppedIngridients[index], dropppedIngridients: $droppedIngridients)
+                    //                    droppedIngridients[index]
+//                        .onAppear {
+//                            droppedIngridients[index].checkCollisions()
+//                        }
                 }
             }
         }
-    }
-    
-    func delete(at offsets: IndexSet) {
-        things.remove(atOffsets: offsets)
     }
 }
 

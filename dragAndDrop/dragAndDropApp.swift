@@ -1,25 +1,17 @@
 //
-//  dragAndDropApp.swift
-//  dragAndDrop
+//  dragAndDropCollisionApp.swift
+//  dragAndDropCollision
 //
-//  Created by win win on 22/04/24.
+//  Created by Nadhif Rahman Alfan on 23/04/24.
 //
 
 import SwiftUI
-import SwiftData
 
 @main
-struct dragAndDropApp: App {
-    let myCard: ModelContainer = {
-        let schema = Schema([UnoCard.self])
-        let container = try! ModelContainer(for: schema, configurations: [])
-        return container
-    }()
-    
+struct dragAndDropCollisionApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
-        .modelContainer(myCard)
     }
 }
