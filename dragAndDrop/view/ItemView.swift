@@ -6,6 +6,8 @@ struct ItemView: View {
     @Binding var ingredient: MyIngredient
     @Binding var ingredients: [MyIngredient]
     @Binding var highestIdx: Double
+    @State private var isAnimating: Bool = false
+    @State private var isDraggingToTrash: Bool = false
     
     var body: some View {
         Image(ingredient.name)
@@ -16,13 +18,17 @@ struct ItemView: View {
             .position(ingredient.loc)
             .zIndex(zidx)
             .onAppear {
-                    withAnimation(Animation.spring(duration: 1)) {
-                        ingredient.loc = CGPoint(x: UIScreen.main.bounds.size.width/2-60, y: UIScreen.main.bounds.size.height/2)
-                           }
-                       }
+                withAnimation(Animation.spring(duration: 1)) {
+                    ingredient.loc = CGPoint(x: UIScreen.main.bounds.size.width/2-60, y: UIScreen.main.bounds.size.height/2)
+                }
+            }
+            .transition(.scale)
+            .animation(.spring())
+            .scaleEffect(isDraggingToTrash ? 0.5 : 1, anchor: .center)
             .gesture(
                 DragGesture()
                     .onChanged { gesture in
+                        isDraggingToTrash = isDraggingOverTrash(gesture.location)
                         ingredient.loc = gesture.location
                         if(zidx < highestIdx-1){
                             zidx = highestIdx
@@ -32,20 +38,40 @@ struct ItemView: View {
                         }
                     }
                     .onEnded ({ value in
-                        checkCollisions()
-                        checkLeftSide()
+                        if !isDraggingOverTrash(value.location) {
+                            checkSide()
+                            checkCollisions()
+                            isDraggingToTrash = false
+                        } else{
+                            removeItem()
+                        }
                     })
             )
     }
     
-    func checkLeftSide() {
-        if ingredient.loc.x < 10 {
+    func isDraggingOverTrash(_ location: CGPoint) -> Bool {
+            let trashRect = CGRect(x: UIScreen.main.bounds.width/2, y: UIScreen.main.bounds.height - 50, width: 20, height: 20)
+            let otherRect = CGRect(origin: location, size: CGSize(width: 10, height: 10))
+            return trashRect.intersects(otherRect)
+        }
+    
+    func hasMoreThanTwoWords(_ string: String) -> Bool {
+        let words = string.split(separator: " ")
+        return words.count >= 2
+    }
+    
+    func checkSide() {
+        if hasMoreThanTwoWords(ingredient.name){
+            return
+        }
+        if ingredient.loc.x < 50{
             removeItemLeft()
+        } else if ingredient.loc.x > UIScreen.main.bounds.size.width - 50{
+            removeItemRight()
         }
     }
     
     func checkCollisions() {
-        
         let thisRect = CGRect(origin: ingredient.loc, size: CGSize(width: 150, height: 150))
         
         for i in 0..<ingredients.count {
@@ -54,26 +80,64 @@ struct ItemView: View {
                 if thisRect.intersects(otherRect) {
                     // Collision detected
                     print("combine \(ingredient.name) and \(ingredients[i].name)")
-                    
-                    
                     // React to collision here
+                    if (ingredient.name == "rice" && ingredients[i].name == "salmon") || (ingredient.name == "salmon" && ingredients[i].name == "rice") {
+                        ingredient.name = "sushi salmon"
+                        ingredients.removeAll(where: {
+                            $0.id == ingredients[i].id
+                        })
+                        return
+                    } else if (ingredient.name == "rice" && ingredients[i].name == "shrimp") || (ingredient.name == "shrimp" && ingredients[i].name == "rice"){
+                        ingredient.name = "sushi shrimp"
+                        ingredients.removeAll(where: {
+                            $0.id == ingredients[i].id
+                        })
+                        return
+                    } else if (ingredient.name == "rice" && ingredients[i].name == "tamago") || ingredient.name == "tamago" && ingredients[i].name == "rice" {
+                        ingredient.name = "sushi tamago"
+                        ingredients.removeAll(where: {
+                            $0.id == ingredients[i].id
+                        })
+                        return
+                    } else if (ingredient.name == "rice" && ingredients[i].name == "tuna") || ingredient.name == "tuna" && ingredients[i].name == "rice" {
+                        ingredient.name = "sushi tuna"
+                        ingredients.removeAll(where: {
+                            $0.id == ingredients[i].id
+                        })
+                        return
+                    }
                 }
             }
         }
-        
     }
     
     func removeItemLeft() {
         withAnimation(Animation.spring(duration: 1)) {
-            print(ingredient.loc)
             ingredient.loc.x = -100
         } completion: {
             ingredients.removeAll(where: {
                 $0.id == ingredient.id
             })
+            print(ingredients)
         }
     }
     
+    func removeItemRight() {
+        withAnimation(Animation.spring(duration: 1)) {
+            ingredient.loc.x = UIScreen.main.bounds.size.width + 100
+        } completion: {
+            ingredients.removeAll(where: {
+                $0.id == ingredient.id
+            })
+            print(ingredients)
+        }
+    }
+    
+    func removeItem(){
+        ingredients.removeAll(where: {
+            $0.id == ingredient.id
+        })
+    }
 }
 
 #Preview {
