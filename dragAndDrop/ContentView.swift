@@ -1,57 +1,48 @@
 //
 //  ContentView.swift
-//  dragAndDropCollision
+//  LearningSushi
 //
-//  Created by Nadhif Rahman Alfan on 23/04/24.
+//  Created by win win on 24/04/24.
 //
 
 import SwiftUI
 
-extension Color {
-    static var random: Color {
-        return Color(
-                    red: .random(in: 0...1),
-                    green: .random(in: 0...1),
-                    blue: .random(in: 0...1)
-        )
-    }
-}
-
 struct ContentView: View {
-    
-    @State private var ingridients: [Ingridient] = [
-        Ingridient(id: 1, name: "Rice", color: .random),
-        Ingridient(id: 2, name: "Salmon", color: .random),
-        Ingridient(id: 3, name: "Shrimp", color: .random),
-        Ingridient(id: 4, name: "Tuna", color: .random),
-    ]
-    
-//    @State private var droppedIngridients: [IngridientView] = []
-    @State private var droppedIngridients: [Ingridient] = []
+    @State var highestIdx = 1.0
+    let defaults = UserDefaults.standard
+    let ingredients = ["rice","salmon","shrimp","tamago", "tuna"]
+    @State var myIngredients:[MyIngredient] = []
     
     var body: some View {
         ZStack {
-            Button{
-                let newIngridient = ingridients.randomElement()!
-                
-                droppedIngridients.append(
-                    Ingridient(id: droppedIngridients.count, name: newIngridient.name, color: newIngridient.color)
-                )
-
-            } label: {
-                Image(systemName: "plus")
+            Color(.background)
+                .ignoresSafeArea()
+            HStack {
+                Button {
+                    let newIngredient = MyIngredient(name: ingredients.randomElement()!)
+                    myIngredients.append(newIngredient)
+                    highestIdx+=1
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .buttonStyle(.bordered)
+                Button {
+                    if myIngredients.count > 0 {
+                        myIngredients.remove(at: .random(in: 0...myIngredients.count-1))
+                    }
+                } label: {
+                    Image(systemName: "minus")
+                }
+                .buttonStyle(.bordered)
             }
-            .buttonStyle(.bordered)
-            if droppedIngridients.count > 0 {
-                ForEach(droppedIngridients.indices, id: \.self) { index in
-                    IngridientView(ingridient: $droppedIngridients[index], dropppedIngridients: $droppedIngridients)
-                    //                    droppedIngridients[index]
-//                        .onAppear {
-//                            droppedIngridients[index].checkCollisions()
-//                        }
+            
+            if myIngredients.count > 0 {
+                ForEach($myIngredients) { ingredient in
+                    ItemView(zidx: Double(highestIdx), ingredient: ingredient, ingredients: $myIngredients, highestIdx: $highestIdx)
                 }
             }
         }
+        .ignoresSafeArea()
     }
 }
 
